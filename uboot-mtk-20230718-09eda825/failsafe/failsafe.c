@@ -12,6 +12,7 @@
 #include <env.h>
 #include <malloc.h>
 #include <net.h>
+#include <net/mtk_dhcpd.h>
 #include <net/mtk_tcp.h>
 #include <net/mtk_httpd.h>
 #include <u-boot/md5.h>
@@ -409,6 +410,7 @@ int start_web_failsafe(void)
 	httpd_register_uri_handler(inst, "/version", &version_handler, NULL);
 	httpd_register_uri_handler(inst, "", &not_found_handler, NULL);
 
+	mtk_dhcpd_start();
 	net_loop(MTK_TCP);
 
 	return 0;

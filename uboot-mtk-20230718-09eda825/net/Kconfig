@@ -265,6 +265,33 @@ config MTK_HTTPD
 	help
 	  Enable mediatek httpd framework that allows some customized features.
 
+config MTK_DHCPD
+	bool "MediaTek lightweight DHCPv4 server"
+	default y
+	depends on MEDIATEK_BOOTMENU && USE_IPADDR && USE_NETMASK
+	select CYCLIC
+	help
+	  Enable a small DHCPv4 server from the MediaTek bootmenu onward. This
+	  allows a directly connected client to obtain an address without being
+	  configured manually, including in the U-Boot console and web failsafe.
+
+config MTK_DHCPD_POOL_START_HOST
+	int "First host number in the MediaTek DHCPv4 pool"
+	default 100
+	range 1 65534
+	depends on MTK_DHCPD
+	help
+	  Host number of the first address offered by the DHCPv4 server.
+
+config MTK_DHCPD_POOL_SIZE
+	int "Number of addresses in the MediaTek DHCPv4 pool"
+	default 101
+	range 1 65534
+	depends on MTK_DHCPD
+	help
+	  Maximum number of addresses in the DHCPv4 pool. The range is clipped
+	  to usable addresses in the configured subnet.
+
 config NET_FORCE_IPADDR
 	bool "Use ipaddr and netmask with CONFIG_IPADDR and CONFIG_NETMASK"
 	default n

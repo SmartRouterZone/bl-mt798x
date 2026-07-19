@@ -13,6 +13,7 @@
 #include <env.h>
 #include <log.h>
 #include <menu.h>
+#include <net/mtk_dhcpd.h>
 #include <watchdog.h>
 #include <malloc.h>
 #include <linux/delay.h>
@@ -542,6 +543,8 @@ static enum bootmenu_ret bootmenu_show(int delay)
 
 	/* Default menu entry is always first */
 	menu_default_set(menu, "0");
+
+	mtk_dhcpd_start();
 
 	puts(ANSI_CURSOR_HIDE);
 	puts(ANSI_CLEAR_CONSOLE);

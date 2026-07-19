@@ -127,6 +127,7 @@
 #if defined(CONFIG_MTK_TCP)
 #include "mtk_tcp.h"
 #endif
+#include <net/mtk_dhcpd.h>
 #include "dhcpv6.h"
 #include "net_rand.h"
 
@@ -439,6 +440,7 @@ int net_loop(enum proto_t protocol)
 {
 	int ret = -EINVAL;
 	enum net_loop_state prev_net_state = net_state;
+	bool dhcpd_was_running = mtk_dhcpd_is_running();
 
 #if defined(CONFIG_CMD_PING)
 	if (protocol != PING)
@@ -457,8 +459,11 @@ int net_loop(enum proto_t protocol)
 #ifdef CONFIG_PHY_NCSI
 	if (phy_interface_is_ncsi() && protocol != NCSI && !ncsi_active()) {
 		printf("%s: configuring NCSI first\n", __func__);
-		if (net_loop(NCSI) < 0)
+		if (net_loop(NCSI) < 0) {
+			if (dhcpd_was_running)
+				mtk_dhcpd_start();
 			return ret;
+		}
 		eth_init_state_only();
 		goto restart;
 	}
@@ -472,6 +477,8 @@ int net_loop(enum proto_t protocol)
 		ret = eth_init();
 		if (ret < 0) {
 			eth_halt();
+			if (dhcpd_was_running)
+				mtk_dhcpd_start();
 			return ret;
 		}
 	} else {
@@ -492,14 +499,22 @@ restart:
 	debug_cond(DEBUG_INT_STATE, "--- net_loop Init\n");
 	net_init_loop();
 
-	if (!test_eth_enabled())
+	if (dhcpd_was_running && protocol == MTK_TCP)
+		mtk_dhcpd_start();
+
+	if (!test_eth_enabled()) {
+		if (dhcpd_was_running)
+			mtk_dhcpd_start();
 		return 0;
+	}
 
 	switch (net_check_prereq(protocol)) {
 	case 1:
 		/* network not configured */
 		eth_halt();
 		net_set_state(prev_net_state);
+		if (dhcpd_was_running)
+			mtk_dhcpd_start();
 		return -ENODEV;
 
 	case 2:
@@ -780,6 +795,8 @@ done:
 	if (pcap_active())
 		pcap_print_status();
 #endif
+	if (dhcpd_was_running)
+		mtk_dhcpd_start();
 	return ret;
 }
 
