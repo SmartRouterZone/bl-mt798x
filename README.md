@@ -8,7 +8,9 @@
 ## Prepare
 
 ```
-sudo apt install gcc-aarch64-linux-gnu build-essential flex bison libssl-dev device-tree-compiler qemu-user-static
+sudo apt install build-essential gcc-aarch64-linux-gnu \
+    flex bison libssl-dev device-tree-compiler qemu-user-static \
+    python3 python-is-python3 bc
 ```
 
 ## Build
@@ -19,6 +21,34 @@ eg: SOC=mt7981 BOARD=wr30u MULTI_LAYOUT=1 ./build.sh
 eg: SOC=mt7981 BOARD=cmcc_rax3000m-emmc ./build.sh
 eg: SOC=mt7986 BOARD=redmi_ax6000 MULTI_LAYOUT=1 ./build.sh
 eg: SOC=mt7986 BOARD=jdcloud_re-cp-03 ./build.sh
+eg: SOC=mt7986 BOARD=clx_s20p ./build.sh
+```
+
+## Boot flow
+
+```text
+BootROM (Power on)
+   |
+   v
+BL2 (*-bl2.bin)
+   |  Initialize DDR and boot storage
+   v
+FIP (*-fip.bin)
+   |-- BL31: ARM Trusted Firmware
+   `-- BL33: U-Boot
+          |
+          |  Load OpenWrt from:
+          |  - production 分区: FIT .bin
+          |  - kernel 分区: kernel FIT from sysupgrade .bin
+          |    (sysupgrade .bin also provides the rootfs 分区)
+          v
+Linux Kernel + DTB
+          |
+          v
+Root filesystem (SquashFS + overlay)
+          |
+          v
+procd (PID 1) -> network and system services
 ```
 
 ---
